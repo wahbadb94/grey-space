@@ -1,56 +1,50 @@
-// GLOBAL VARS & TYPES
-let numberOfShapes = 15;
-let speed: p5.Element;
+let circles: Array<PolarCircle>;
 
-// P5 WILL AUTOMATICALLY USE GLOBAL MODE IF A DRAW() FUNCTION IS DEFINED
 function setup() {
   console.log("🚀 - Setup initialized - P5 is running");
 
-  // FULLSCREEN CANVAS
   createCanvas(windowWidth, windowHeight);
-
-  // SETUP SOME OPTIONS
-  rectMode(CENTER).noFill().frameRate(30);
-
-  // SPEED SLIDER
-  speed = createSlider(0, 15, 3, 1);
-  speed.position(10, 10);
-  speed.style("width", "80px");
+  rectMode(CENTER).noStroke().frameRate(60);
+  
+  circles = generateCircles();
 }
 
-// p5 WILL HANDLE REQUESTING ANIMATION FRAMES FROM THE BROWSER AND WIL RUN DRAW() EACH ANIMATION FROME
-function draw() {
-  // CLEAR BACKGROUND
-  background(0);
-  // TRANSLATE TO CENTER OF SCREEN
-  translate(width / 2, height / 2);
-
-  const colorsArr = ColorHelper.getColorsArray(numberOfShapes);
-  const baseSpeed = (frameCount / 500) * <number>speed.value();
-  for (var i = 0; i < numberOfShapes; i++) {
-    const npoints = 3 + i;
-    const radius = 20 * i;
-    const angle = TWO_PI / npoints;
-    const spin = baseSpeed * (numberOfShapes - i);
-
-    strokeWeight(3 + i).stroke(colorsArr[i]);
-
-    push();
-    rotate(spin);
-    // DRAW
-    beginShape();
-    for (let a = 0; a < TWO_PI; a += angle) {
-      let sx = cos(a) * radius;
-      let sy = sin(a) * radius;
-      vertex(sx, sy);
-    }
-    endShape(CLOSE);
-    // END:DRAW
-    pop();
-  }
-}
-
-// p5 WILL AUTO RUN THIS FUNCTION IF THE BROWSER WINDOW SIZE CHANGES
 function windowResized() {
   createCanvas(windowWidth, windowHeight);
 }
+
+function draw() {
+  background(0);
+  fill(127);
+  translate(width/2, height/2);
+  
+  circles.forEach( c => {
+    c.draw();
+    c.update();
+  });
+}
+
+function distance(a: IPoint, b: IPoint) : number {
+  let dx = b.x-a.x;
+  let dy = b.y - b.x;
+  
+  return sqrt( pow(dx, 2) + pow(dy, 2) );
+}
+
+function generateCircles() : PolarCircle[] {
+  let output: Array<PolarCircle> = new Array<PolarCircle>();;
+
+  let origin = new PolarCircle(0, 0, 1);
+  output.push(origin);
+
+  let rSpacing: number = 50;
+  for (let r = rSpacing; r < width/2; r+=rSpacing){
+    for(let theta=0; theta < 2*PI; theta += PI/12) {
+      let c = new PolarCircle(r, theta, 20);
+      output.push(c);
+    }
+  }
+
+  return output;
+}
+
