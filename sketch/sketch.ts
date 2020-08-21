@@ -1,50 +1,65 @@
-let circles: Array<PolarCircle>;
+//var cc = require('ccapture.js');
+
+let xRotation = 0;
+let locations = Array<I3DPoint>();
+let thetaY = 0;
+let thetaX = 0;
+let boxWidth: number;
 
 function setup() {
-  console.log("🚀 - Setup initialized - P5 is running");
-
-  createCanvas(windowWidth, windowHeight);
+  createCanvas(600, 600, WEBGL);
   rectMode(CENTER).noStroke().frameRate(60);
-  
-  circles = generateCircles();
-}
-
-function windowResized() {
-  createCanvas(windowWidth, windowHeight);
+  locations = initPoints(width/80);;
 }
 
 function draw() {
-  background(0);
-  fill(127);
-  translate(width/2, height/2);
-  
-  circles.forEach( c => {
-    c.draw();
-    c.update();
+
+  ambientMaterial(255);
+  background(12);
+  orbitControl();
+
+
+  let dthetaY = map(mouseX, 0, width, -0.007, 0.007);
+  let dthetaX = map(mouseY, 0, height, 0.007, -0.007);
+  let Zoffset = (width/4)*sin(frameCount/100);
+
+  pointLight(255, 255, 255, 0 , 0,0);
+  ambientLight(20);
+
+
+  locations.forEach( p => {
+    push();
+    rotateY(thetaY);
+    rotateX(thetaX);
+    translate(0, 0, Zoffset);
+    translate(p.x, p.y, p.z);
+    boxWidth =  width/30*sin(frameCount/50 + p.x/300 + p.y/300 - p.z/300) + 1;
+    box(boxWidth/2);
+    pop();
   });
+
+  thetaX += dthetaX;
+  thetaY += dthetaY;
 }
 
-function distance(a: IPoint, b: IPoint) : number {
-  let dx = b.x-a.x;
-  let dy = b.y - b.x;
-  
-  return sqrt( pow(dx, 2) + pow(dy, 2) );
-}
-
-function generateCircles() : PolarCircle[] {
-  let output: Array<PolarCircle> = new Array<PolarCircle>();;
-
-  let origin = new PolarCircle(0, 0, 1);
-  output.push(origin);
-
-  let rSpacing: number = 50;
-  for (let r = rSpacing; r < width/2; r+=rSpacing){
-    for(let theta=0; theta < 2*PI; theta += PI/12) {
-      let c = new PolarCircle(r, theta, 20);
-      output.push(c);
+function initPoints(numPoints1D: number): Array<I3DPoint> {
+  let points = new Array<I3DPoint>();
+  let xSpacing = width/numPoints1D;
+  for (let x=-4*width/5; x<4*width/5; x+=xSpacing)
+  {
+    for (let y=-4*height/5; y<4*height/5; y+=xSpacing)
+    {
+      for (let z = width; z>-width; z-= xSpacing) {
+        points.push(new Point3(x, y, z));
+      }
     }
   }
 
-  return output;
+  return points;
 }
+
+function distance(p: Point3) : number {
+  return sqrt( pow(p.x,2) + pow(p.y,2) + pow(p.z,2) );
+}
+
 

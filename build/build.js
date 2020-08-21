@@ -1,44 +1,17 @@
-var Circle = (function () {
-    function Circle(x, y, diameter) {
+var Point2 = (function () {
+    function Point2(x, y) {
         this.x = x;
         this.y = y;
-        this.diameter = diameter;
     }
-    Circle.prototype.draw = function () {
-        ellipse(this.x, this.y, this.diameter);
-    };
-    return Circle;
+    return Point2;
 }());
-var PolarCircle = (function () {
-    function PolarCircle(r, theta, diameter) {
-        this.r = r;
-        this.theta = theta;
-        this.diameter = diameter;
+var Point3 = (function () {
+    function Point3(x, y, z) {
+        this.x = x;
+        this.y = y;
+        this.z = z;
     }
-    Object.defineProperty(PolarCircle.prototype, "x", {
-        get: function () {
-            return this.r * cos(this.theta);
-        },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(PolarCircle.prototype, "y", {
-        get: function () {
-            return this.r * sin(this.theta) * (-1);
-        },
-        enumerable: true,
-        configurable: true
-    });
-    PolarCircle.prototype.draw = function () {
-        var fillColor = map(this.diameter, 0, this.r / 4, 255, 20);
-        fill(fillColor);
-        ellipse(this.x, this.y, this.diameter);
-    };
-    PolarCircle.prototype.update = function () {
-        this.diameter = (this.r / 4) * sin(frameCount / 100 + this.r / 2) + 1;
-        this.theta += this.diameter / 10000;
-    };
-    return PolarCircle;
+    return Point3;
 }());
 var ColorHelper = (function () {
     function ColorHelper() {
@@ -85,42 +58,52 @@ var ColorHelper = (function () {
     };
     return ColorHelper;
 }());
-var circles;
+var xRotation = 0;
+var locations = Array();
+var thetaY = 0;
+var thetaX = 0;
+var boxWidth;
 function setup() {
-    console.log("🚀 - Setup initialized - P5 is running");
-    createCanvas(windowWidth, windowHeight);
+    createCanvas(600, 600, WEBGL);
     rectMode(CENTER).noStroke().frameRate(60);
-    circles = generateCircles();
-}
-function windowResized() {
-    createCanvas(windowWidth, windowHeight);
+    locations = initPoints(width / 80);
+    ;
 }
 function draw() {
-    background(0);
-    fill(127);
-    translate(width / 2, height / 2);
-    circles.forEach(function (c) {
-        c.draw();
-        c.update();
+    ambientMaterial(255);
+    background(12);
+    orbitControl();
+    var dthetaY = map(mouseX, 0, width, -0.007, 0.007);
+    var dthetaX = map(mouseY, 0, height, 0.007, -0.007);
+    var Zoffset = (width / 4) * sin(frameCount / 100);
+    pointLight(255, 255, 255, 0, 0, 0);
+    ambientLight(20);
+    locations.forEach(function (p) {
+        push();
+        rotateY(thetaY);
+        rotateX(thetaX);
+        translate(0, 0, Zoffset);
+        translate(p.x, p.y, p.z);
+        boxWidth = width / 30 * sin(frameCount / 50 + p.x / 300 + p.y / 300 - p.z / 300) + 1;
+        box(boxWidth / 2);
+        pop();
     });
+    thetaX += dthetaX;
+    thetaY += dthetaY;
 }
-function distance(a, b) {
-    var dx = b.x - a.x;
-    var dy = b.y - b.x;
-    return sqrt(pow(dx, 2) + pow(dy, 2));
-}
-function generateCircles() {
-    var output = new Array();
-    ;
-    var origin = new PolarCircle(0, 0, 1);
-    output.push(origin);
-    var rSpacing = 50;
-    for (var r = rSpacing; r < width / 2; r += rSpacing) {
-        for (var theta = 0; theta < 2 * PI; theta += PI / 12) {
-            var c = new PolarCircle(r, theta, 20);
-            output.push(c);
+function initPoints(numPoints1D) {
+    var points = new Array();
+    var xSpacing = width / numPoints1D;
+    for (var x = -4 * width / 5; x < 4 * width / 5; x += xSpacing) {
+        for (var y = -4 * height / 5; y < 4 * height / 5; y += xSpacing) {
+            for (var z = width; z > -width; z -= xSpacing) {
+                points.push(new Point3(x, y, z));
+            }
         }
     }
-    return output;
+    return points;
+}
+function distance(p) {
+    return sqrt(pow(p.x, 2) + pow(p.y, 2) + pow(p.z, 2));
 }
 //# sourceMappingURL=../sketch/sketch/build.js.map
